@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Editable Player Stats Table (Responsive + Live HTML)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px auto;
+      max-width: 1000px;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    h2, h3 {
+      color: #2c3e50;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    td[contenteditable="true"] {
+      background-color: #fffff6;
+      cursor: text;
+    }
+
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .add-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .del-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .copy-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    textarea {
+      width: 100%;
+      height: 300px;
+      font-family: monospace;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Editable Player Stats Table</h2>
+
+<button class="add-btn" onclick="addRow()">+ Add Row</button>
+<button class="copy-btn" onclick="copyHTML()">Copy HTML</button>
+
+<table id="editable-table">
+  <thead>
+    <tr>
+      <th>Year</th>
+      <th>Team</th>
+      <th>AB</th>
+      <th>H</th>
+      <th>.OBA</th>
+      <th>R</th>
+      <th>HR</th>
+      <th>RBI</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="table-body"></tbody>
+</table>
+
+<h3>Live Responsive HTML Code</h3>
+<textarea id="html-output" readonly></textarea>
+
+<script>
+  function addRow(data = {}) {
+    const tbody = document.getElementById("table-body");
+    const row = document.createElement("tr");
+
+    const fields = ['year', 'team', 'ab', 'h', 'oba', 'r', 'hr', 'rbi'];
+    fields.forEach(field => {
+      const cell = document.createElement("td");
+      cell.contentEditable = true;
+      cell.innerText = data[field] || '';
+      cell.addEventListener("input", generateHTML);
+      row.appendChild(cell);
+    });
+
+    const actionCell = document.createElement("td");
+    const delButton = document.createElement("button");
+    delButton.className = "del-btn";
+    delButton.innerText = "Delete";
+    delButton.onclick = () => {
+      row.remove();
+      generateHTML();
+    };
+    actionCell.appendChild(delButton);
+    row.appendChild(actionCell);
+
+    tbody.appendChild(row);
+    generateHTML();
+  }
+
+  function generateHTML() {
+    const wrapper = document.createElement("div");
+    wrapper.style.overflowX = "auto";
+    wrapper.style.maxWidth = "100%";
+
+    const table = document.createElement("table");
+    table.style.borderCollapse = "collapse";
+    table.style.minWidth = "600px";
+    table.style.width = "100%";
+    table.style.fontFamily = "sans-serif";
+
+    const header = `
+      <tr>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">Year</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">Team</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">AB</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">H</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">.OBA</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">R</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">HR</th>
+        <th style="border: 1px solid #ddd; padding: 6px 12px; background-color: #f0f0f0; text-align: center;">RBI</th>
+      </tr>`;
+    const thead = document.createElement("thead");
+    thead.innerHTML = header;
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    let total = { ab: 0, h: 0, r: 0, hr: 0, rbi: 0 };
+
+    document.querySelectorAll("#table-body tr").forEach(row => {
+      const cells = row.querySelectorAll("td");
+      const ab = parseInt(cells[2].innerText) || 0;
+      const h = parseInt(cells[3].innerText) || 0;
+      const r = parseInt(cells[5].innerText) || 0;
+      const hr = parseInt(cells[6].innerText) || 0;
+      const rbi = parseInt(cells[7].innerText) || 0;
+
+      total.ab += ab;
+      total.h += h;
+      total.r += r;
+      total.hr += hr;
+      total.rbi += rbi;
+
+      const dataRow = document.createElement("tr");
+      for (let i = 0; i < 8; i++) {
+        const td = document.createElement("td");
+        td.style = "border: 1px solid #ddd; padding: 6px 12px; text-align: center;";
+        td.innerText = cells[i].innerText;
+        dataRow.appendChild(td);
+      }
+      tbody.appendChild(dataRow);
+    });
+
+    const obaAvg = total.ab ? (total.h / total.ab).toFixed(3) : ".000";
+    const totalRow = document.createElement("tr");
+    totalRow.style = "font-weight: bold; background-color: #eee;";
+    totalRow.innerHTML = `
+      <td colspan="2" style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">Career Stats</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${total.ab}</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${total.h}</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${obaAvg}</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${total.r}</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${total.hr}</td>
+      <td style="border: 1px solid #ddd; padding: 6px 12px; text-align: center;">${total.rbi}</td>
+    `;
+    tbody.appendChild(totalRow);
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+
+    document.getElementById("html-output").value = wrapper.outerHTML;
+  }
+
+  function copyHTML() {
+    const output = document.getElementById("html-output");
+    output.select();
+    navigator.clipboard.writeText(output.value).then(() => {
+      alert("HTML copied to clipboard!");
+    });
+  }
+
+  // Add initial row on page load
+  addRow();
+</script>
+
+</body>
+</html>
